@@ -13,6 +13,8 @@ use App\Notifications\SignupOtpNotification;
 use Mail;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Exception;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -160,7 +162,61 @@ class UserController extends Controller
             return response()->json([
                 'status' => 'error',
                 'status_code' => 500,
-                'message' => 'There was a problem on the Server.'.$e
+                'message' => 'There was a problem on the Server.'
+            ], 500);
+        }
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'user_name' => 'required|string|min:4|max:20',
+            'email' => 'required|string|email|max:255',
+            'password' => 'required|string|min:8|confirmed',
+            'user_role' => 'required|string',
+            'avatar' => ['required','image', 'mimes:jpeg,png,jpg,gif,svg', Rule::dimensions()->maxWidth(256)->maxHeight(256)]
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'status_code' => 422,
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+       
+
+        try{
+
+            $authuser =  $request->user(); 
+
+            $avatar = time().'.'.$request->avatar->extension();
+            $request->avatar->move(public_path('uploads'), $avatar); 
+
+            //$avatar  =  Image::create(["image_name" => $avatar]);
+
+            $user = User::find($authuser->id);
+            $user->name = $request->name;
+            $user->user_name = $request->user_name;
+            $user->email = $request->email;
+            $user->password = Hash::make($request->password);
+            $user->user_role = $request->user_role;
+            $user->avatar = $avatar;
+            $user->save();
+
+            return response()->json([
+                'status'=>'success',
+                'status_code' => 200,
+                'message' => 'Profile has been updated.',
+            ], 200);
+    
+        }catch(Exception $e){
+            return response()->json([
+                'status' => 'error',
+                'status_code' => 500,
+                'message' => 'There was a problem on the Server.'
             ], 500);
         }
     }

@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\AuthUserController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -20,12 +20,17 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('signup', [UserController::class, 'register']);
 Route::post('verify-account', [UserController::class, 'verifyAccount']);
 
+Route::post('login', [AuthUserController::class, 'login']);
+
+
+
 Route::post('testmail', [UserController::class, 'testMail']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
-});
+}); 
 
+Route::middleware('auth:sanctum')->post('/profile', [UserController::class, 'updateProfile'] );
 
 Route::get('test', function (Request $request) {
     return response()->json([
