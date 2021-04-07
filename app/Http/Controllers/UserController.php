@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SendInvites;
 use App\Mail\SendOtp;
 
 use App\Models\User;
@@ -219,5 +220,45 @@ class UserController extends Controller
                 'message' => 'There was a problem on the Server.'
             ], 500);
         }
+    }
+
+    public function sendInvites(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'status_code' => 422,
+                'message' => $validator->errors()
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        if($user->user_role != 'admin')
+            return response()->json([
+                'status' => 'error',
+                'status_code' => 422,
+                'message' => 'You are not allowed to send invites.'
+            ], 422);
+        //send notification
+        $email = $request->email;
+        // return $email;
+        $data = [
+                'subject' => 'Invitation',
+                'message' => 'test msg',
+            ];
+
+        Mail::to($email)->queue(new SendInvites($data));
+
+        return response()->json([
+            'status' => 'success',
+            'status_code' => 200,
+            'message' => 'The invitation was sent to '.$request->email
+        ], 200);
+
     }
 }

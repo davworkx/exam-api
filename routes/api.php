@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::middleware('auth:sanctum')->post('/profile', [UserController::class, 'updateProfile'] );
 
+Route::middleware('auth:sanctum')->post('/send-invites', [UserController::class, 'sendInvites'] );
+
 Route::get('test', function (Request $request) {
     return response()->json([
         'msg' => 'Hello World!'
